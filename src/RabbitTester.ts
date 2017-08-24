@@ -1,16 +1,27 @@
 import {RabbitDriver,AmqpMessage,Socket,RabbitChannelOptions,RabbitConfig} from 'rabbit-driver'
 import * as Promise from 'bluebird';
 
-
+interface Stats {
+    sentMessages: number,
+    numberOfClients: number,
+}
 class RabbitTester {
     drivers:RabbitDriver.pushworker[];
     testQueue: RabbitDriver.pushworker;
     pushedMessages: number;
+    stats: Stats;
 
     constructor() {
         this.drivers = [];
+        this.stats = {
+            sentMessages: 0,
+            numberOfClients: 0
+        }
     }
     test() {
+        setInterval(() => {
+            console.log('stats: ', this.stats);
+        },2000);
         this.start_senders(10)
             .then(() => {
                 this.push_messages(100);
@@ -40,14 +51,11 @@ class RabbitTester {
     }
     push_messages(batchLength: number) {
         //start pushing messages to the the first queue
-        let currentBatch = 0;
         setInterval(() => {
-            console.log('pushing batch: ', currentBatch+1);
             for(let i=0; i<batchLength; i++) {
                 this.drivers[0].publish(new AmqpMessage('message', 'this is the message'));
-                this.pushedMessages++;
+                this.stats.sentMessages++;
             }
-            currentBatch++;
         }, 100);
     }
 
@@ -55,6 +63,7 @@ class RabbitTester {
         // start sending consumers
         let currentConsumers = 0;
         setInterval(() => {
+            let drivers: RabbitDriver.pushworker[] = [];
             for(let i=0; i<max_queues; i++) {
                 let config:RabbitConfig = {
                     rabbitmq: {
@@ -63,13 +72,15 @@ class RabbitTester {
                 };
                 let channelOpts: RabbitChannelOptions = {name: 'queue-'+ i, server: {persistent: true}, client: {prefetch: 1}};
                 let driver = new RabbitDriver.pushworker(config, channelOpts, false);
-                this.drivers.push(driver);
+                drivers.push(driver);
             }
-            currentConsumers+=max_queues;
-            console.log('sent consumers: ', currentConsumers);
+
+            Promise.each(drivers, (driver) => {
+                return driver.init();
+            }).then(() => {
+                this.stats.numberOfClients+=max_queues;
+            })
         }, 1000);
-
-
     }
 }
 

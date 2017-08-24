@@ -5,8 +5,15 @@ const Promise = require("bluebird");
 class RabbitTester {
     constructor() {
         this.drivers = [];
+        this.stats = {
+            sentMessages: 0,
+            numberOfClients: 0
+        };
     }
     test() {
+        setInterval(() => {
+            console.log('stats: ', this.stats);
+        }, 2000);
         this.start_senders(10)
             .then(() => {
             this.push_messages(100);
@@ -33,20 +40,18 @@ class RabbitTester {
     }
     push_messages(batchLength) {
         //start pushing messages to the the first queue
-        let currentBatch = 0;
         setInterval(() => {
-            console.log('pushing batch: ', currentBatch + 1);
             for (let i = 0; i < batchLength; i++) {
                 this.drivers[0].publish(new rabbit_driver_1.AmqpMessage('message', 'this is the message'));
-                this.pushedMessages++;
+                this.stats.sentMessages++;
             }
-            currentBatch++;
         }, 100);
     }
     start_consumers(max_queues) {
         // start sending consumers
         let currentConsumers = 0;
         setInterval(() => {
+            let drivers = [];
             for (let i = 0; i < max_queues; i++) {
                 let config = {
                     rabbitmq: {
@@ -55,10 +60,13 @@ class RabbitTester {
                 };
                 let channelOpts = { name: 'queue-' + i, server: { persistent: true }, client: { prefetch: 1 } };
                 let driver = new rabbit_driver_1.RabbitDriver.pushworker(config, channelOpts, false);
-                this.drivers.push(driver);
+                drivers.push(driver);
             }
-            currentConsumers += max_queues;
-            console.log('sent consumers: ', currentConsumers);
+            Promise.each(drivers, (driver) => {
+                return driver.init();
+            }).then(() => {
+                this.stats.numberOfClients += max_queues;
+            });
         }, 1000);
     }
 }
