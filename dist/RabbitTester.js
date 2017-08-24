@@ -7,9 +7,6 @@ class RabbitTester {
         this.drivers = [];
     }
     test() {
-        setInterval(() => {
-            console.log('pushed messages: ', this.pushedMessages);
-        }, 1000);
         this.start_senders(10)
             .then(() => {
             this.push_messages(100);
