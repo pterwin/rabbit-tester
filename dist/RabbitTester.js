@@ -38,7 +38,7 @@ class RabbitTester {
                 this.pushedMessages++;
             }
             currentBatch++;
-        }, 1000);
+        }, 100);
     }
 }
 let tester = new RabbitTester();

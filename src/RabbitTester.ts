@@ -45,7 +45,7 @@ class RabbitTester {
                 this.pushedMessages++;
             }
             currentBatch++;
-        }, 1000);
+        }, 100);
     }
 }
 
