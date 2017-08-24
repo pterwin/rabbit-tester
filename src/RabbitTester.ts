@@ -18,7 +18,7 @@ class RabbitTester {
 
         this.start_senders(10)
             .then(() => {
-                this.push_messages();
+                this.push_messages(100);
             })
     }
     start_senders(max_queues:number): Promise<any> {
@@ -40,13 +40,17 @@ class RabbitTester {
             return driver.init();
         })
     }
-    push_messages() {
+    push_messages(batchLength: number) {
         //start pushing messages to the the first queue
-        console.log('starting to push messages');
-        while(true) {
-            this.drivers[0].publish(new AmqpMessage('message', 'this is the message'));
-            this.pushedMessages++;
-        }
+        let currentBatch = 0;
+        console.log('pushing batch: ', currentBatch+1);
+        setInterval(() => {
+            for(let i=0; i<batchLength; i++) {
+                this.drivers[0].publish(new AmqpMessage('message', 'this is the message'));
+                this.pushedMessages++;
+            }
+            currentBatch++;
+        }, 5000);
     }
 }
 

@@ -12,7 +12,7 @@ class RabbitTester {
         }, 1000);
         this.start_senders(10)
             .then(() => {
-            this.push_messages();
+            this.push_messages(100);
         });
     }
     start_senders(max_queues) {
@@ -31,13 +31,17 @@ class RabbitTester {
             return driver.init();
         });
     }
-    push_messages() {
+    push_messages(batchLength) {
         //start pushing messages to the the first queue
-        console.log('starting to push messages');
-        while (true) {
-            this.drivers[0].publish(new rabbit_driver_1.AmqpMessage('message', 'this is the message'));
-            this.pushedMessages++;
-        }
+        let currentBatch = 0;
+        console.log('pushing batch: ', currentBatch + 1);
+        setInterval(() => {
+            for (let i = 0; i < batchLength; i++) {
+                this.drivers[0].publish(new rabbit_driver_1.AmqpMessage('message', 'this is the message'));
+                this.pushedMessages++;
+            }
+            currentBatch++;
+        }, 5000);
     }
 }
 let tester = new RabbitTester();
