@@ -18,6 +18,7 @@ class RabbitTester {
             sentMessages: 0,
             numberOfClients: 0
         }
+
     }
     test() {
         this.rabbit_host = 'amqp://localhost';
@@ -85,7 +86,6 @@ class RabbitTester {
         }, 1000);
     }
 }
-
 
 let tester = new RabbitTester();
 tester.test();
