@@ -10,6 +10,7 @@ class RabbitTester {
     testQueue: RabbitDriver.pushworker;
     pushedMessages: number;
     stats: Stats;
+    rabbit_host: string;
 
     constructor() {
         this.drivers = [];
@@ -19,6 +20,7 @@ class RabbitTester {
         }
     }
     test() {
+        this.rabbit_host = 'amqp://localhost';
         setInterval(() => {
             console.log('stats: ', this.stats);
         },2000);
@@ -36,7 +38,7 @@ class RabbitTester {
         for(let i=0; i<max_queues; i++) {
             let config:RabbitConfig = {
                 rabbitmq: {
-                    hostname: 'amqp://localhost'
+                    hostname: this.rabbit_host
                 }
             };
 
@@ -67,7 +69,7 @@ class RabbitTester {
             for(let i=0; i<max_queues; i++) {
                 let config:RabbitConfig = {
                     rabbitmq: {
-                        hostname: 'amqp://localhost'
+                        hostname: this.rabbit_host
                     }
                 };
                 let channelOpts: RabbitChannelOptions = {name: 'queue-'+ i, server: {persistent: true}, client: {prefetch: 1}};
